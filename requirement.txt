@@ -1,0 +1,14 @@
+pyyaml
+tqdm
+munch
+resampy
+soundfile
+moviepy==1.0.3
+gast==0.2.2
+ipython
+jupyter
+matplotlib
+pandas
+xlrd
+openpyxl
+tomorrow3

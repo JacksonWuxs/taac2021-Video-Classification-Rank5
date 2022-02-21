@@ -1,0 +1,158 @@
+#############################################################
+#  1. Model Define Configs
+#############################################################
+ModelConfig:
+  model_type: 'NextVladBERT'
+  use_modal_drop: False #在训练过程中，对多模态特征的某一模态进行丢弃
+  with_embedding_bn: False #对不同模态输入特征进行BN归一化
+  modal_drop_rate: 0.3
+  with_video_head: True #视频特征
+  with_audio_head: True #音频特征
+  with_text_head: True  #文本特征
+  with_image_head: False # False #图片特征
+
+  #视频特征(16384)
+  video_head_type: 'NeXtVLAD'
+  video_head_params:
+    nextvlad_cluster_size: 128
+    groups: 16
+    expansion: 2
+    feature_size: 2552 #inception feature dim
+    directly: True
+    max_frames: 300
+
+  #语音特征(1024)
+  audio_head_type: 'NeXtVLAD'
+  audio_head_params:
+    nextvlad_cluster_size: 64
+    groups: 16
+    expansion: 2
+    feature_size: 128 #vggfish feature dim
+    directly: True
+    max_frames: 300
+
+  #文本特征(1024)
+  text_head_type: 'BERT'
+  text_head_params:
+    bert_config:
+      attention_probs_dropout_prob: 0.1
+      hidden_act: "gelu"
+      hidden_dropout_prob: 0.1
+      hidden_size: 768
+      initializer_range: 0.02
+      intermediate_size: 3072
+      max_position_embeddings: 512
+      num_attention_heads: 12
+      num_hidden_layers: 12
+      type_vocab_size: 2
+      vocab_size: 21128
+    bert_emb_encode_size: 1024
+  
+  #图片特征(2048)
+  image_head_type: 'resnet_v2_50'
+  image_head_params: {}
+
+
+  #多模态特征融合方式
+  fusion_head_type: 'SE'
+  fusion_head_params:
+    hidden1_size: 1024
+    gating_reduction: 8 # reduction factor in se context gating
+    drop_rate:
+      video: 0.8
+      audio: 0.8
+      image: 0.5
+      text: 0.4
+      fusion: 0.9
+      
+  #tagging分类器参数
+  tagging_classifier_type: 'MoeModel'
+  tagging_classifier_params:
+    num_classes: 82 #标签数目, 按需修改
+    num_mixtures: 2
+    #l2_penalty: 0.0
+    
+#############################################################
+#2. Optimizer & Train Configs
+#############################################################
+OptimizerConfig:
+  optimizer: 'AdamOptimizer'
+  optimizer_init_params: {}
+  clip_gradient_norm: 1.0
+  learning_rate_dict:
+    video: 0.0001
+    audio: 0.0001
+    text: 0.00001
+    image: 0.0001
+    classifier: 0.0005
+  loss_type_dict:
+    tagging: "CrossEntropyLoss"
+  max_step_num: 6500
+  export_model_steps: 500
+  learning_rate_decay: 0.1
+  start_new_model: True # 如果为True，重新训练； 如果False，则resume
+  num_gpu: 1
+  log_device_placement: False
+  gpu_allow_growth: True
+  pretrained_model:
+    text_pretrained_model: 'pretrained/bert/chinese_L-12_H-768_A-12/bert_model.ckpt'
+    image_pretrained_model: 'pretrained/resnet_v2_50/resnet_v2_50.ckpt'
+  train_dir: './checkpoints/tagging5k_temp' #训练模型保存目录,按需修改
+
+#############################################################
+#    3. DataSet Config
+#############################################################
+DatasetConfig:
+  batch_size: 16
+  shuffle: True
+  train_data_source_list:
+    train799:
+      file: '../dataset/tagging/GroundTruth/datafile/train_4.txt'   # preprocessing脚本生成文件，按需求修改 (datafile)
+      batch_size: 16
+
+  valid_data_source_list:
+    val799:
+      file: '../dataset/tagging/GroundTruth/datafile/valid_4.txt'    # preprocessing脚本生成文件，按需求修改
+      batch_size: 128
+
+  preprocess_root: 'src/dataloader/preprocess/'
+  preprocess_config:
+    feature:
+      - name: 'video,video_frames_num,idx'
+        shape: [[300,2552], [],[]]
+        dtype: 'float32,int32,string'
+        class: 'frames_npy_preprocess.Preprocess'
+        extra_args: 
+          max_frames: 300
+          feat_dim: 2552
+          return_frames_num: True
+          return_idx: True
+
+      - name: 'audio,audio_frames_num'
+        shape: [[300,128], []]
+        dtype: 'float32,int32'
+        class: 'frames_npy_preprocess.Preprocess'
+        extra_args: 
+          max_frames: 300
+          feat_dim: 128
+          return_frames_num: True
+
+      - name: 'image'
+        shape: [[224,224,3]]
+        dtype: 'float32'
+        class: 'image_preprocess.Preprocess'
+
+      - name: 'text'
+        shape: [[300]]
+        dtype: 'int64'
+        class: 'text_preprocess.Preprocess'
+        extra_args:
+          vocab: 'pretrained/bert/chinese_L-12_H-768_A-12/vocab.txt'
+          max_len: 300
+    label: 
+      - name: 'tagging'
+        dtype: 'float32'
+        shape: [[82]]   # 根据 num_classes修改
+        class: 'label_preprocess.Preprocess_label_sparse_to_dense'
+        extra_args: 
+          index_dict: '../dataset/label_id.txt'    # 按需求更改
