@@ -141,5 +141,6 @@
 
 #### 3 参考文献
 
-我们对比赛中的思路和方法进行总结并形成了论文：[Rethinking the Impacts of Overfitting and Feature Quality on Small-scale Video Classification](https://dl.acm.org/doi/abs/10.1145/3474085.3479226)
-这个视频是论文的讲解：https://www.bilibili.com/video/BV1ju411o7qz?spm_id_from=333.999.0.0
+论文：[Rethinking the Impacts of Overfitting and Feature Quality on Small-scale Video Classification](https://dl.acm.org/doi/abs/10.1145/3474085.3479226)
+
+视频讲解：https://www.bilibili.com/video/BV1ju411o7qz?spm_id_from=333.999.0.0
