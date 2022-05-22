@@ -2,6 +2,10 @@
 
 > 作者：吴烜圣 ([email](wuxsmail@163.com), [phone](13036864606))、杨非池 ([email](feichi.yang@usc.edu)）、周童（[email](zhoutong0322@163.com)）、林心悦（[email](xl9yr@virginia.edu)）
 
+论文：[Rethinking the Impacts of Overfitting and Feature Quality on Small-scale Video Classification](https://dl.acm.org/doi/abs/10.1145/3474085.3479226)
+
+视频讲解：https://www.bilibili.com/video/BV1ju411o7qz?spm_id_from=333.999.0.0
+
 #### 0 代码复现
 
 * 推荐配置：CPU: 6 Cores  Memory: 16GB  GPU:V100-32GB
@@ -139,8 +143,3 @@
   4. K折模型预测：约20分钟
   5. K折模型结果融合：5秒
 
-#### 3 参考文献
-
-论文：[Rethinking the Impacts of Overfitting and Feature Quality on Small-scale Video Classification](https://dl.acm.org/doi/abs/10.1145/3474085.3479226)
-
-视频讲解：https://www.bilibili.com/video/BV1ju411o7qz?spm_id_from=333.999.0.0
